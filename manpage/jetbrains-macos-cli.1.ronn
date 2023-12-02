@@ -1,0 +1,223 @@
+script_name(1) - Command-line interface for ide_name
+====================================================
+
+## SYNOPSIS
+
+`script_name` [<file-or-dir> _..._] [`nosplash`] [`dontReopenProjects`] [`disableNonBundledPlugins`]
+
+`script_name --wait` <file-or-dir> [`nosplash`] [`disableNonBundledPlugins`]
+
+`script_name diff` <file1> <file2> [<file3>]
+
+`script_name merge` <file1> <file2> [<common-base-file>] <output-file>
+
+`script_name format` <file-or-dir> _..._
+	[`-m`|`-mask` <masks>]
+	[`-r`|`-R`]
+	[`-s`|`-settings` <settings-file>]
+	[`-allowDefaults`]
+	[`-charset` <charset>]
+	[`-d`|`-dry`]
+
+`script_name inspect` <project-dir> <inspection-profile-xml-file> <output-dir>
+	[`-changes`]
+	[`-d` <subdirectory>]
+	[`-format` `xml`|`json`|`plain`]
+	[`-v0`|`-v1`|`-v2`]
+
+`script_name installPlugins` <plugin-id> _..._ [<repository-url> _..._]
+
+
+## DESCRIPTION
+
+Use ide_name features from the command line: open files and projects, view diffs, merge files, format code, inspect code, and install plugins.
+
+
+## LAUNCH THE IDE, OPEN FILES/DIRECTORIES
+
+`script_name` [<file-or-dir> _..._] [_option_ _..._]
+
+Without any arguments, ide_name launches, as though its icon was clicked. For instance, if a project was open when the IDE was last closed, it is reopened.
+
+When files or directories are passed, ide_name opens them instead of restoring its previous state. When you specify the path to a file, ide_name opens it in the LightEdit mode, unless it belongs to a project that is already open or there is special logic to automatically open or create a project (for example, in case of Maven or Gradle files). If you specify a directory with an existing project, ide_name opens this project. If you open a directory that is not part of a project, ide_name adds the `.idea` directory to it, making it a project.
+
+**Options**
+
+Options may be given anywhere on the command line, before, after or in between other arguments.
+
+* `--wait` | `-wait` | `-w`:
+	Waits for the file or directory to be closed before returning to the command prompt.
+	For example, if you open file.txt with `script_name --wait file.txt`,
+	the shell will be waiting until file.txt is closed in ide_name.
+	You may pass only a single file or directory when using this option.
+
+* `--nosplash` | `-nosplash` | `nosplash`:
+	Do not show the splash screen when loading ide_name.
+
+* `--dontReopenProjects` | `-dontReopenProjects` | `dontReopenProjects`:
+	Do not reopen projects, and instead show the welcome screen.
+	This can help if a project that was open crashes ide_name.
+
+* `--disableNonBundledPlugins` | `-disableNonBundledPlugins` | `disableNonBundledPlugins`:
+	Do not load manually installed plugins.
+	This can help if a plugin that you installed crashes ide_name.
+	You will be able to start the IDE and disable or uninstall the problematic plugin.
+
+Note that some of these options are accepted without leading dashes. To open a directory whose name matches one of these options in ide_name, pass the directory name with a path component, like `~/nosplash` or `./nosplash`.
+
+
+## COMPARE FILES
+
+`script_name diff` <file1> <file2> [<file3>]
+
+Open the Differences Viewer to compare two or three files from the command line. For example, you can compare the current version of a file with its backup, or your local copy of a file with its copy from the remote repository or its copy from another branch.
+
+You can compare files of any types, including binaries and .jar files. The Differences Viewer provides a powerful editor that enables code completion, live templates, and other features.
+
+
+## MERGE FILES
+
+`script_name merge` <file1> <file2> [<common-base-file>] <output-file>
+
+Open the Merge dialog to perform a two-way or three-way merge.
+
+To perform a three-way merge, you need to specify paths for two modified versions of a file, the base revision (a common origin of both modified versions), and the output file to save merge results.
+
+Don't specify the optional base revision if you want to treat the current contents of the output file as the common origin. In this case, if the output is an empty file, this essentially becomes a two-way merge.
+
+
+## FORMAT SOURCE CODE
+
+`script_name format` <file-or-dir> _..._ [_option_ _..._]
+
+ide_name lets you reformat your code according to the requirements you've specified in your current code style scheme or the `.editorconfig` file. If anything is not defined in `.editorconfig`, it is taken from the project settings.
+
+The command-line formatter launches an instance of ide_name in the background and applies the formatting. It will not work if another instance of ide_name is already running. In this case, you can perform code style formatting from the running instance. Use the command-line formatter for automated regular maintenance of a large codebase with many contributors to ensure a consistent coding style.
+
+To be able to format files, install and enable plugins with support for the corresponding file types in ide_name (for example, the Shell Script plugin to format shell script files).
+
+**Options**
+
+Options may be given anywhere on the command line, before, after or in between other arguments.
+
+* `-m` <masks> | `-mask` <masks>:
+	Only process files that match one of the specified masks.
+	Pass a comma-separated list of masks, using * and ? wildcards,
+	matching any string and any single character, respectively.
+
+* `-r` | `-R`:
+	Process specified directories recursively.
+
+* `-s` <settings-file> | `-settings` <settings-file>:
+	Specify the code style settings file to use for formatting.
+	This can be either a file containing exported code style settings
+	(open the `Editor` > `Code Style` page of the IDE settings, click the gear icon, and select Export),
+	or the `.idea/codeStyles/Project.xml` file stored in your project directory.
+
+	The formatter also looks for `.editorconfig` files in the parent directories
+	and applies them for formatting on top of the ide_name code style settings. In this case,
+	if formatting settings from EditorConfig overlap with the settings from your code style scheme,
+	ide_name will use the settings from EditorConfig.
+	The remaining settings will be taken from your code style scheme.
+
+	If there is a project in one of the parent folders,
+	its settings will be used implicitly as well as EditorConfig.
+
+	Files outside a project will be skipped unless you pass either this option or the `-allowDefaults` option.
+
+* `-allowDefaults`:
+	Use the default code style settings when the style is not defined for a file:
+	when `-s`/`-settings` was not passed and the file does not belong to any project.
+	Otherwise, the file will be skipped and not formatted.
+
+* `-charset` <charset>:
+	Preserve encoding and enforce the character set for reading and writing source files.
+	For example: `-charset ISO-8859-15`
+
+	This option is useful if the command-line formatter cannot correctly process special letters in a source file.
+
+* `-d` | `-dry`:
+	Dry-run/validation mode. The formatter will exit with a non-zero status if it would modify any files,
+	or zero if all files are already formatted.
+
+**Examples**
+
+* Format two specific files from the ~/MyProject/src directory using the project's code style and EditorConfig settings:
+
+	`script_name format ~/MyProject/src/foo.html ~/MyProject/src/goo.html`
+
+* Format all files in the ~/Data/src directory, recursively including files in all subdirectories, using the default code style settings:
+
+	`script_name format ~/Data/src -r`
+
+* Format all the .xml and .html files in the current directory (not subdirectories), using code style settings from ~/Data/settings.xml:
+
+	`script_name format -settings ~/Data/settings.xml -mask "*.xml,*.html" .`
+
+
+## INSPECT SOURCE CODE
+
+`script_name inspect` <project-dir> <inspection-profile-xml-file> <output-dir> [_option_ _..._]
+
+Run all the configured inspections for a project, and store the results as an XML, JSON, or plain text file with a report.
+
+ide_name runs code inspections to find and highlight syntax errors, dead code, possible bugs, bad coding style, and other problems. You can run all the configured inspections for a specific project and store the results as an XML, JSON, or plain text file with a report.
+
+An inspection profile is an XML file that specifies enabled inspections and their options. By default, project inspection profiles are stored in the project directory: `.idea/inspectionProfiles`. Global IDE inspection profiles are stored in the IDE's configuration directory's `inspection` subdirectory: `~/Library/Application Support/JetBrains/<product><version>/inspection`.
+
+You can open the generated file with inspection results in ide_name or any text editor as a regular file. However, it is more convenient to analyze it using the Offline View of the Problems tool window: Open the project for which you ran the inspection, go to Code | Analyze Code | View Offline Inspection Results, then select the directory with the inspection results and click OK.
+
+The command-line inspector launches an instance of ide_name in the background where it runs the inspections. It will not work if another instance of ide_name is already running. In this case, you can use inspections in the running instance. Use the command-line inspector for automated regular code analysis of large projects with many contributors.
+
+Note that code inspections rely on a properly defined project SDK.
+
+**Options**
+
+Options may be given anywhere on the command line, before, after or in between other arguments.
+
+* `-changes`:
+	Run inspections only on local uncommitted changes.
+
+* `-d` <subdirectory>:
+	The full path of a subdirectory to inspect, rather than inspecting the whole project.
+
+* `-format` `xml`|`json`|`plain`:
+	The format of the output file containing inspection results: XML (default), JSON, or plain text.
+
+* `-v0` | `-v1` | `-v2`:
+	Set the verbosity level of the output. `-v0` is low verbosity (default), `-v1` is medium,
+	and `-v2` is maximum verbosity.
+
+**Example**
+
+* Inspect the `src` directory of the `~/MyProject` project using the project's `MyProfile.xml` inspection profile, with maximum verbosity, and save results to an XML file in the `~/MyProject/InspectionResults` directory:
+
+	`script_name inspect -d ~/MyProject/src ~/MyProject ~/MyProject/.idea/inspectionProfiles/MyProfile.xml -v2 ~/MyProject/InspectionResults`
+
+
+## INSTALL PLUGINS
+
+`script_name installPlugins` <plugin-id> _..._ [<repository-url> _..._]
+
+Install plugins from the JetBrains Marketplace (<https://plugins.jetbrains.com>), or from a custom plugin repository.
+
+To install a plugin, you must know its Plugin ID. The developer of a plugin specifies this unique identifier for the plugin in its plugin configuration file. If it is a public plugin, you can find its ID on the plugin's page in JetBrains Marketplace: on the Versions tab, click the relevant version to view the Plugin ID and other details.
+
+Quit IntelliJ IDEA before running this command!
+
+Installing plugins means putting them in the plugins directory. If you run this command on a fresh IntelliJ IDEA installation, the IDE will not suggest importing the settings from the previous installation when you launch it for the first time, because the settings will no longer be empty.
+
+**Examples**
+
+* Install the Grazie Lite plugin:
+
+	`script_name installPlugins tanvd.grazi`
+
+* Install a plugin with the ID `com.example.myplugin` from a custom repository `http://plugins.example.com:8080/updatePlugins.xml`:
+
+	`script_name installPlugins com.example.myplugin http://plugins.example.com:8080/updatePlugins.xml`
+
+
+## SEE ALSO
+
+cli_help_url

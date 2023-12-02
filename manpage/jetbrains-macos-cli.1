@@ -1,0 +1,248 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "SCRIPT_NAME" "1" "December 2023" "JetBrains" ""
+.
+.SH "NAME"
+\fBscript_name\fR \- Command\-line interface for ide_name
+.
+.SH "SYNOPSIS"
+\fBscript_name\fR [\fIfile\-or\-dir\fR \fI\.\.\.\fR] [\fBnosplash\fR] [\fBdontReopenProjects\fR] [\fBdisableNonBundledPlugins\fR]
+.
+.P
+\fBscript_name \-\-wait\fR \fIfile\-or\-dir\fR [\fBnosplash\fR] [\fBdisableNonBundledPlugins\fR]
+.
+.P
+\fBscript_name diff\fR \fIfile1\fR \fIfile2\fR [\fIfile3\fR]
+.
+.P
+\fBscript_name merge\fR \fIfile1\fR \fIfile2\fR [\fIcommon\-base\-file\fR] \fIoutput\-file\fR
+.
+.P
+\fBscript_name format\fR \fIfile\-or\-dir\fR \fI\.\.\.\fR [\fB\-m\fR|\fB\-mask\fR \fImasks\fR] [\fB\-r\fR|\fB\-R\fR] [\fB\-s\fR|\fB\-settings\fR \fIsettings\-file\fR] [\fB\-allowDefaults\fR] [\fB\-charset\fR \fIcharset\fR] [\fB\-d\fR|\fB\-dry\fR]
+.
+.P
+\fBscript_name inspect\fR \fIproject\-dir\fR \fIinspection\-profile\-xml\-file\fR \fIoutput\-dir\fR [\fB\-changes\fR] [\fB\-d\fR \fIsubdirectory\fR] [\fB\-format\fR \fBxml\fR|\fBjson\fR|\fBplain\fR] [\fB\-v0\fR|\fB\-v1\fR|\fB\-v2\fR]
+.
+.P
+\fBscript_name installPlugins\fR \fIplugin\-id\fR \fI\.\.\.\fR [\fIrepository\-url\fR \fI\.\.\.\fR]
+.
+.SH "DESCRIPTION"
+Use ide_name features from the command line: open files and projects, view diffs, merge files, format code, inspect code, and install plugins\.
+.
+.SH "LAUNCH THE IDE, OPEN FILES/DIRECTORIES"
+\fBscript_name\fR [\fIfile\-or\-dir\fR \fI\.\.\.\fR] [\fIoption\fR \fI\.\.\.\fR]
+.
+.P
+Without any arguments, ide_name launches, as though its icon was clicked\. For instance, if a project was open when the IDE was last closed, it is reopened\.
+.
+.P
+When files or directories are passed, ide_name opens them instead of restoring its previous state\. When you specify the path to a file, ide_name opens it in the LightEdit mode, unless it belongs to a project that is already open or there is special logic to automatically open or create a project (for example, in case of Maven or Gradle files)\. If you specify a directory with an existing project, ide_name opens this project\. If you open a directory that is not part of a project, ide_name adds the \fB\.idea\fR directory to it, making it a project\.
+.
+.P
+\fBOptions\fR
+.
+.P
+Options may be given anywhere on the command line, before, after or in between other arguments\.
+.
+.TP
+\fB\-\-wait\fR | \fB\-wait\fR | \fB\-w\fR
+Waits for the file or directory to be closed before returning to the command prompt\. For example, if you open file\.txt with \fBscript_name \-\-wait file\.txt\fR, the shell will be waiting until file\.txt is closed in ide_name\. You may pass only a single file or directory when using this option\.
+.
+.TP
+\fB\-\-nosplash\fR | \fB\-nosplash\fR | \fBnosplash\fR
+Do not show the splash screen when loading ide_name\.
+.
+.TP
+\fB\-\-dontReopenProjects\fR | \fB\-dontReopenProjects\fR | \fBdontReopenProjects\fR
+Do not reopen projects, and instead show the welcome screen\. This can help if a project that was open crashes ide_name\.
+.
+.TP
+\fB\-\-disableNonBundledPlugins\fR | \fB\-disableNonBundledPlugins\fR | \fBdisableNonBundledPlugins\fR
+Do not load manually installed plugins\. This can help if a plugin that you installed crashes ide_name\. You will be able to start the IDE and disable or uninstall the problematic plugin\.
+.
+.P
+Note that some of these options are accepted without leading dashes\. To open a directory whose name matches one of these options in ide_name, pass the directory name with a path component, like \fB~/nosplash\fR or \fB\./nosplash\fR\.
+.
+.SH "COMPARE FILES"
+\fBscript_name diff\fR \fIfile1\fR \fIfile2\fR [\fIfile3\fR]
+.
+.P
+Open the Differences Viewer to compare two or three files from the command line\. For example, you can compare the current version of a file with its backup, or your local copy of a file with its copy from the remote repository or its copy from another branch\.
+.
+.P
+You can compare files of any types, including binaries and \.jar files\. The Differences Viewer provides a powerful editor that enables code completion, live templates, and other features\.
+.
+.SH "MERGE FILES"
+\fBscript_name merge\fR \fIfile1\fR \fIfile2\fR [\fIcommon\-base\-file\fR] \fIoutput\-file\fR
+.
+.P
+Open the Merge dialog to perform a two\-way or three\-way merge\.
+.
+.P
+To perform a three\-way merge, you need to specify paths for two modified versions of a file, the base revision (a common origin of both modified versions), and the output file to save merge results\.
+.
+.P
+Don\'t specify the optional base revision if you want to treat the current contents of the output file as the common origin\. In this case, if the output is an empty file, this essentially becomes a two\-way merge\.
+.
+.SH "FORMAT SOURCE CODE"
+\fBscript_name format\fR \fIfile\-or\-dir\fR \fI\.\.\.\fR [\fIoption\fR \fI\.\.\.\fR]
+.
+.P
+ide_name lets you reformat your code according to the requirements you\'ve specified in your current code style scheme or the \fB\.editorconfig\fR file\. If anything is not defined in \fB\.editorconfig\fR, it is taken from the project settings\.
+.
+.P
+The command\-line formatter launches an instance of ide_name in the background and applies the formatting\. It will not work if another instance of ide_name is already running\. In this case, you can perform code style formatting from the running instance\. Use the command\-line formatter for automated regular maintenance of a large codebase with many contributors to ensure a consistent coding style\.
+.
+.P
+To be able to format files, install and enable plugins with support for the corresponding file types in ide_name (for example, the Shell Script plugin to format shell script files)\.
+.
+.P
+\fBOptions\fR
+.
+.P
+Options may be given anywhere on the command line, before, after or in between other arguments\.
+.
+.TP
+\fB\-m\fR \fImasks\fR | \fB\-mask\fR \fImasks\fR
+Only process files that match one of the specified masks\. Pass a comma\-separated list of masks, using * and ? wildcards, matching any string and any single character, respectively\.
+.
+.TP
+\fB\-r\fR | \fB\-R\fR
+Process specified directories recursively\.
+.
+.TP
+\fB\-s\fR \fIsettings\-file\fR | \fB\-settings\fR \fIsettings\-file\fR
+Specify the code style settings file to use for formatting\. This can be either a file containing exported code style settings (open the \fBEditor\fR > \fBCode Style\fR page of the IDE settings, click the gear icon, and select Export), or the \fB\.idea/codeStyles/Project\.xml\fR file stored in your project directory\.
+.
+.IP
+The formatter also looks for \fB\.editorconfig\fR files in the parent directories and applies them for formatting on top of the ide_name code style settings\. In this case, if formatting settings from EditorConfig overlap with the settings from your code style scheme, ide_name will use the settings from EditorConfig\. The remaining settings will be taken from your code style scheme\.
+.
+.IP
+If there is a project in one of the parent folders, its settings will be used implicitly as well as EditorConfig\.
+.
+.IP
+Files outside a project will be skipped unless you pass either this option or the \fB\-allowDefaults\fR option\.
+.
+.TP
+\fB\-allowDefaults\fR
+Use the default code style settings when the style is not defined for a file: when \fB\-s\fR/\fB\-settings\fR was not passed and the file does not belong to any project\. Otherwise, the file will be skipped and not formatted\.
+.
+.TP
+\fB\-charset\fR \fIcharset\fR
+Preserve encoding and enforce the character set for reading and writing source files\. For example: \fB\-charset ISO\-8859\-15\fR
+.
+.IP
+This option is useful if the command\-line formatter cannot correctly process special letters in a source file\.
+.
+.TP
+\fB\-d\fR | \fB\-dry\fR
+Dry\-run/validation mode\. The formatter will exit with a non\-zero status if it would modify any files, or zero if all files are already formatted\.
+.
+.P
+\fBExamples\fR
+.
+.TP
+Format two specific files from the ~/MyProject/src directory using the project\'s code style and EditorConfig settings:
+.
+.IP
+\fBscript_name format ~/MyProject/src/foo\.html ~/MyProject/src/goo\.html\fR
+.
+.TP
+Format all files in the ~/Data/src directory, recursively including files in all subdirectories, using the default code style settings:
+.
+.IP
+\fBscript_name format ~/Data/src \-r\fR
+.
+.TP
+Format all the \.xml and \.html files in the current directory (not subdirectories), using code style settings from ~/Data/settings\.xml:
+.
+.IP
+\fBscript_name format \-settings ~/Data/settings\.xml \-mask "*\.xml,*\.html" \.\fR
+.
+.SH "INSPECT SOURCE CODE"
+\fBscript_name inspect\fR \fIproject\-dir\fR \fIinspection\-profile\-xml\-file\fR \fIoutput\-dir\fR [\fIoption\fR \fI\.\.\.\fR]
+.
+.P
+Run all the configured inspections for a project, and store the results as an XML, JSON, or plain text file with a report\.
+.
+.P
+ide_name runs code inspections to find and highlight syntax errors, dead code, possible bugs, bad coding style, and other problems\. You can run all the configured inspections for a specific project and store the results as an XML, JSON, or plain text file with a report\.
+.
+.P
+An inspection profile is an XML file that specifies enabled inspections and their options\. By default, project inspection profiles are stored in the project directory: \fB\.idea/inspectionProfiles\fR\. Global IDE inspection profiles are stored in the IDE\'s configuration directory\'s \fBinspection\fR subdirectory: \fB~/Library/Application Support/JetBrains/<product><version>/inspection\fR\.
+.
+.P
+You can open the generated file with inspection results in ide_name or any text editor as a regular file\. However, it is more convenient to analyze it using the Offline View of the Problems tool window: Open the project for which you ran the inspection, go to Code | Analyze Code | View Offline Inspection Results, then select the directory with the inspection results and click OK\.
+.
+.P
+The command\-line inspector launches an instance of ide_name in the background where it runs the inspections\. It will not work if another instance of ide_name is already running\. In this case, you can use inspections in the running instance\. Use the command\-line inspector for automated regular code analysis of large projects with many contributors\.
+.
+.P
+Note that code inspections rely on a properly defined project SDK\.
+.
+.P
+\fBOptions\fR
+.
+.P
+Options may be given anywhere on the command line, before, after or in between other arguments\.
+.
+.TP
+\fB\-changes\fR
+Run inspections only on local uncommitted changes\.
+.
+.TP
+\fB\-d\fR \fIsubdirectory\fR
+The full path of a subdirectory to inspect, rather than inspecting the whole project\.
+.
+.TP
+\fB\-format\fR \fBxml\fR|\fBjson\fR|\fBplain\fR
+The format of the output file containing inspection results: XML (default), JSON, or plain text\.
+.
+.TP
+\fB\-v0\fR | \fB\-v1\fR | \fB\-v2\fR
+Set the verbosity level of the output\. \fB\-v0\fR is low verbosity (default), \fB\-v1\fR is medium, and \fB\-v2\fR is maximum verbosity\.
+.
+.P
+\fBExample\fR
+.
+.TP
+Inspect the \fBsrc\fR directory of the \fB~/MyProject\fR project using the project\'s \fBMyProfile\.xml\fR inspection profile, with maximum verbosity, and save results to an XML file in the \fB~/MyProject/InspectionResults\fR directory:
+.
+.IP
+\fBscript_name inspect \-d ~/MyProject/src ~/MyProject ~/MyProject/\.idea/inspectionProfiles/MyProfile\.xml \-v2 ~/MyProject/InspectionResults\fR
+.
+.SH "INSTALL PLUGINS"
+\fBscript_name installPlugins\fR \fIplugin\-id\fR \fI\.\.\.\fR [\fIrepository\-url\fR \fI\.\.\.\fR]
+.
+.P
+Install plugins from the JetBrains Marketplace (\fIhttps://plugins\.jetbrains\.com\fR), or from a custom plugin repository\.
+.
+.P
+To install a plugin, you must know its Plugin ID\. The developer of a plugin specifies this unique identifier for the plugin in its plugin configuration file\. If it is a public plugin, you can find its ID on the plugin\'s page in JetBrains Marketplace: on the Versions tab, click the relevant version to view the Plugin ID and other details\.
+.
+.P
+Quit IntelliJ IDEA before running this command!
+.
+.P
+Installing plugins means putting them in the plugins directory\. If you run this command on a fresh IntelliJ IDEA installation, the IDE will not suggest importing the settings from the previous installation when you launch it for the first time, because the settings will no longer be empty\.
+.
+.P
+\fBExamples\fR
+.
+.TP
+Install the Grazie Lite plugin:
+.
+.IP
+\fBscript_name installPlugins tanvd\.grazi\fR
+.
+.TP
+Install a plugin with the ID \fBcom\.example\.myplugin\fR from a custom repository \fBhttp://plugins\.example\.com:8080/updatePlugins\.xml\fR:
+.
+.IP
+\fBscript_name installPlugins com\.example\.myplugin http://plugins\.example\.com:8080/updatePlugins\.xml\fR
+.
+.SH "SEE ALSO"
+cli_help_url
+.\" jetbrains-macos-cli
+
