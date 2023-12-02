@@ -27,86 +27,42 @@ script_name="$(basename "$0")"
 # See https://www.jetbrains.com/help/idea/working-with-the-ide-features-from-command-line.html
 function usage() {
 	use "$script_name" \
-		"Launch the IDE as though via its icon (restoring the last open project, etc.)"
+		"Launch the IDE as though via its icon (restoring previously open projects, etc.)
+		Options: nosplash, dontReopenProjects, disableNonBundledPlugins"
 
 	use "$script_name <file-or-dir ...>" \
 		"Open arbitrary files and/or directories in the IDE. If you open a directory that's
-		not in a project, the IDE will add a .idea directory to it, making it a project."
+		not in a project, the IDE will add a .idea directory to it, making it a project.
+		Options: nosplash, disableNonBundledPlugins"
 
 	use "$script_name --wait <file-or-dir>" \
-		"Open a file or directory, and wait for it to be closed before returning
-		to the command prompt."
+		"Open a file or directory, and wait for it to be closed.
+		Options: nosplash, disableNonBundledPlugins"
 
 	use "$script_name diff <file1> <file2> [file3]" \
 		"Open the diff viewer to compare two or three files."
 
 	use "$script_name merge <file1> <file2> [common-base-file] <output-file>" \
-		"Open the Merge dialog to perform a three-way or two-way merge. To perform a three-way
-		merge, you need to specify paths for two modified versions of a file, the base revision
-		(a common origin of both modified versions), and the output file to save merge results.
-		Don't specify the optional base revision if you want to treat the current contents
-		of the output file as the common origin. In this case, if the output is an empty file,
-		this essentially becomes a two-way merge."
+		"Open the Merge dialog to perform a three-way or two-way merge."
 
 	# If you pass a mask, only files that match it will be formatted,
 	# even if you explicitly pass a non-matching file explicitly;
 	# we don't check for that condition in this script, or consider it a problem
 	use "$script_name format <file-or-dir ...>" \
 		"Format the given files and/or the files in the given directories, optionally recursively.
-		By default, files in a project will be formatted with the project's code style settings,
-		but you can override that with the -s/-settings option. Files outside a project will be
-		skipped unless you pass one of the -s/-settings or -allowDefaults options." \
-		"-m|-mask masks" \
-			"Only process files that match one of the specified masks.
-			Pass a comma-separated list of masks, using * and ? wildcards." \
-		"-r|-R" \
-	    	"Process all directories recursively." \
-		"-s|-settings settings-file" \
-			"The code style settings XML file to format with, e.g. exported settings
-			or the .idea/codeStyles/Project.xml in one of your projects." \
-		"-allowDefaults" \
-			"Use the default code style settings when the style is not defined for a file:
-			when -s/-settings was not passed and the file does not belong to any project.
-			Otherwise, the file will be skipped and not formatted." \
-		"-charset charset" \
-			"Preserve encoding and enforce the character set for reading and writing
-			source files; for example: -charset ISO-8859-15" \
-		"-d|-dry" \
-			"Dry-run/validation mode. The formatter will exit with a non-zero status
-			if it would modify any files, or zero if all files are already formatted."
+		By default, files are formatted with the project's settings; override with -s/-settings.
+		Files outside a project are skipped unless -s/-settings or -allowDefaults is passed.
+		Options: -m|-mask masks, -r|-R, -s|-settings file.xml, -allowDefaults, -charset set, -d|-dry"
 	
 	use "$script_name inspect <project-dir> <inspection-profile-xml-file> <output-dir>" \
-		"Run all the configured inspections for a project, and store the results as an XML,
-		JSON, or plain text file with a report." \
-		"-changes" \
-			"Run inspections only on local uncommitted changes." \
-		"-d subdirectory" \
-			"The full path of a subdirectory to inspect, rather than inspecting the whole project." \
-		"-format xml|json|plain" \
-			"The format of the output file with inspection results: xml (default), json, or plain." \
-		"-v0|-v1|-v2" \
-			"Set the verbosity level of the output. -v0 is low verbosity (default), -v1 is medium,
-			-v2 is maximum verbosity."
+		"Run all the configured inspections for a project, and store the results in a file.
+		Options: -changes, -d subdir, -format xml|json|plain, -v0|-v1|-v2 (verbosity)"
 
 	use "$script_name installPlugins <plugin-id ...> [repository-url ...]" \
-		"Install plugins from the JetBrains Marketplace at https://plugins.jetbrains.com,
-		or from a custom plugin repository."
-
-	use "Global Options" \
-		"These options can be used with any of the above modes (though in some modes they have
-		no effect), and may be passed with or without leading dashes." \
-		"nosplash" \
-			"Do not show the splash screen when loading the IDE." \
-		"dontReopenProjects" \
-			"Do not reopen projects, and instead show the welcome screen.
-			This can help if a project that was open crashes the IDE." \
-		"disableNonBundledPlugins" \
-			"Do not load manually installed plugins. Helpful if a plugin you installed
-			crashes the IDE. You'll be able to start the IDE and disable or uninstall 
-			the problematic plugin."
+		"Install plugins, by default from the JetBrains Marketplace (https://plugins.jetbrains.com)."
 
 	if man -S1 -w "$script_name" &> /dev/null; then
-		echo -e $'\n'"Run 'man $script_name' for full usage details"
+		echo -e $'\n'"${bright}Run 'man ${script_name}' for full usage details${plain}"
 	fi
 }
 
