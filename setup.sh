@@ -7,6 +7,12 @@ else
 	install_dir=/usr/local/bin
 fi
 
+if [[ -n $JETBRAINS_CLI_MAN_DIR ]]; then
+	man_dir=$JETBRAINS_CLI_MAN_DIR
+else
+	man_dir=/usr/local/share/man/man1
+fi
+
 if [[ -z $NO_COLOR ]]; then
 	bright='\033[0;1m'
 	plain='\033[0m'
@@ -29,14 +35,19 @@ setup_script_name="$(basename -- "$setup_script_path")"
 
 function usage() {
 	echo -e "\n${bright}${setup_script_name} [directory ...]${plain}"
-	echo "Create launch scripts for installed JetBrains IDEs that share IntelliJ IDEA's"
-	echo "command-line format, optionally checking the passed directory paths for IDEs."
-	echo "Scripts are created in /usr/local/bin by default; set \$JETBRAINS_CLI_INSTALL_DIR"
-	echo "to override."
+	echo "  Create launch scripts and man pages for all installed JetBrains IDEs"
+	echo "  that use JetBrains' standard command-line format and options"
+	echo "  (including IntelliJ IDEA and their other marquee IDEs)."
+	echo
+	echo "  Optionally pass a list of directories to search for JetBrains IDEs"
+	echo "  (in case this installer doesn't find them itself for some reason)."
 
 	echo -e "\n${bright}${setup_script_name} --uninstall${plain}"
-	echo "Remove scripts created by this script. Scripts are removed from /usr/local/bin"
-	echo "by default; set \$JETBRAINS_CLI_INSTALL_DIR to override."
+	echo "  Remove scripts and man pages created by this script."
+
+	echo
+	echo "Scripts are created in \$JETBRAINS_CLI_INSTALL_DIR (/usr/local/bin by default);"
+	echo "Man pages are created in \$JETBRAINS_CLI_MAN_DIR (/usr/local/share/man/man1)."
 }
 
 function array_contains() {
@@ -202,7 +213,7 @@ for ide in "${ides[@]}"; do
 
 		# Try manually searching some common directories for any app whose name starts with $ide_name,
 		# in case something is wrong with mdfind, or we have an outdated bundle ID
-		find_apps "$ide_name" /Applications ~/Applications ~/Desktop ~/Downloads
+		find_apps "$ide_name" /Applications ~/Applications ~/Desktop ~/Downloads "${find_ide_apps_in_directories[@]}"
 
 		if [[ ${#ide_apps[@]} == 0 ]]; then
 			echo "⏭️  $ide_name isn't installed"  # We still may need to delete outdated scripts
@@ -249,11 +260,11 @@ for ide in "${ides[@]}"; do
 
 			while [[ -e $install_path || -L $install_path ]]; do
 				if [[ -L $install_path ]]; then
-					echo "❌ Can't replace symlink: $install_path"
+					echo "⚠️  Can't replace symlink: $install_path"
 				elif [[ -d $install_path ]]; then
-					echo "❌ Can't replace directory: $install_path"
+					echo "⚠️  Can't replace directory: $install_path"
 				elif ! grep -q jetbrains-macos-cli "$install_path"; then
-					echo "❌ Can't overwrite existing file: $install_path"
+					echo "⚠️  Can't overwrite existing file: $install_path"
 				elif ! array_contains "$script_name" "${created_scripts[@]}"; then
 					break  # Overwrite the script we previously created
 				fi
@@ -269,9 +280,9 @@ for ide in "${ides[@]}"; do
 
 			mkdirp "$install_dir"
 			if [[ -w $install_dir ]]; then
-				sudo=""
+				sudo_for_install=""
 			else
-				sudo="sudo"
+				sudo_for_install="sudo"
 				if [[ $sudo_explained != true ]]; then
 					echo "ℹ️  We need to use sudo to create scripts in $install_dir"
 					sudo_explained=true
@@ -279,14 +290,53 @@ for ide in "${ides[@]}"; do
 			fi
 
 			echo "✅ $script_name -> $app"
-			sed -e "s/^ide_app=.*/ide_app=\"${app//\//\\/}\"/" \
-				-e "s/^ide_binary=.*/ide_binary=\"$ide_binary\"/" \
-				-e "s/^ide_name=.*/ide_name=\"$ide_name\"/" \
-				"$setup_script_dir/jetbrains-macos-cli.sh" | $sudo tee "$install_path" > /dev/null
-			$sudo chmod 755 "$install_path"
+			sed -e "s|^ide_app=.*|ide_app=\"$app\"|" \
+				-e "s|^ide_binary=.*|ide_binary=\"$ide_binary\"|" \
+				-e "s|^ide_name=.*|ide_name=\"$ide_name\"|" \
+				"$setup_script_dir/jetbrains-macos-cli.sh" | $sudo_for_install tee "$install_path" > /dev/null
+			$sudo_for_install chmod 755 "$install_path"
 
 			created_scripts+=("$script_name")
 			IFS=$'\n' read -r -d '' -a cleanup_scripts < <(delete_from_array "$script_name" "${cleanup_scripts[@]}"; printf '\0')
+
+			# Quietly create the man page too, if possible
+			mkdirp "$man_dir"
+			if [[ -w $man_dir ]]; then
+				sudo_for_man=""
+			else
+				sudo_for_man="sudo"
+				if [[ $sudo_explained != true ]]; then
+					echo "ℹ️  We need to use sudo to create man pages in $man_dir"
+					sudo_explained=true
+				fi
+			fi
+
+			man_path="$man_dir/$script_name.1"
+			if [[ -L $man_path ]]; then
+				echo "❌ Can't replace symlink: $man_path"
+			elif [[ -d $man_path ]]; then
+				echo "❌ Can't replace directory: $man_path"
+			elif test -f "$man_path" && test -s "$man_path" && ! grep -q jetbrains-macos-cli "$man_path"; then
+				echo "❌ Can't overwrite existing file: $man_path"
+			else
+				if [[ $ide_name == Rider* ]]; then
+					cli_help_url="https://www.jetbrains.com/help/rider/Working_with_the_IDE_Features_from_Command_Line.html"
+				else
+					case $ide_binary in
+						go*) ide_short_name=go;;
+						ruby*) ide_short_name=ruby;;
+						rust*) ide_short_name=rust;;
+						*) ide_short_name=$ide_binary;;
+					esac
+
+					cli_help_url="https://www.jetbrains.com/help/$ide_short_name/working-with-the-ide-features-from-command-line.html"
+				fi
+
+				sed -e "s|script_name|$script_name|" \
+					-e "s|ide_name|$ide_name|" \
+					-e "s|cli_help_url|$cli_help_url|" \
+					"$setup_script_dir/manpage/jetbrains-macos-cli.1" | $sudo_for_man tee "$man_path" > /dev/null
+			fi
 		done
 	fi
 
@@ -297,17 +347,40 @@ for ide in "${ides[@]}"; do
 		action="Removing outdated script"
 	fi
 
-	if [[ -w $install_dir ]]; then
-		sudo=""
-	else
-		sudo="sudo"
-	fi
+	[[ -w $install_dir ]] && sudo_for_install="" || sudo_for_install="sudo"
+	[[ -w $man_dir ]] && sudo_for_man="" || sudo_for_man="sudo"
 
 	for script_name in "${cleanup_scripts[@]}"; do
 		cleanup_path="$install_dir/$script_name"
 		if test -f "$cleanup_path" && grep -q jetbrains-macos-cli "$cleanup_path"; then
 			echo "🗑️  $action: $script_name"
-			$sudo rm -f "$cleanup_path"
+			$sudo_for_install rm -f "$cleanup_path"
+			removed_something=true
+		fi
+
+		cleanup_path="$man_dir/$script_name.1"
+		if test -f "$cleanup_path" && grep -q jetbrains-macos-cli "$cleanup_path"; then
+			$sudo_for_man rm -f "$cleanup_path"
 		fi
 	done
 done
+
+if [[ $uninstall == true && $removed_something != true ]]; then
+	echo "ℹ️  Nothing to uninstall"
+fi
+
+# Clean up any lingering man pages: remove those without a corresponding script
+if [[ -d $man_dir && -r $man_dir && -x $man_dir ]]; then
+	[[ -w $man_dir ]] && sudo_for_man="" || sudo_for_man="sudo"
+
+	cleanup_pages=()
+	IFS=$'\n' read -r -d '' -a cleanup_pages < <(cd "$man_dir" &&
+		grep -al --directories=skip jetbrains-macos-cli -- * 2> /dev/null; printf '\0')
+
+	for page_name in "${cleanup_pages[@]}"; do
+		script_name="$(basename -s .1 "$page_name")"
+		if ! test -f "$install_dir/$script_name" && ! type "$script_name" &> /dev/null; then
+			$sudo_for_man rm -f "$man_dir/$page_name"
+		fi
+	done
+fi
