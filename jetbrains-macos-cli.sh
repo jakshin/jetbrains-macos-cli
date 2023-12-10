@@ -45,9 +45,6 @@ function usage() {
 	use "$script_name merge <file1> <file2> [common-base-file] <output-file>" \
 		"Open the Merge dialog to perform a three-way or two-way merge."
 
-	# If you pass a mask, only files that match it will be formatted,
-	# even if you explicitly pass a non-matching file explicitly;
-	# we don't check for that condition in this script, or consider it a problem
 	use "$script_name format <file-or-dir ...>" \
 		"Format the given files and/or the files in the given directories, optionally recursively.
 		By default, files are formatted with the project's settings; override with -s/-settings.
@@ -259,6 +256,9 @@ elif [[ $commands == *" ${args[0]} "* ]]; then
 
 	elif [[ $command == format ]]; then
 		# https://www.jetbrains.com/help/idea/command-line-formatter.html#9f540e09
+		# If you pass a mask, only files that match it will be formatted,
+		# even if you explicitly pass a non-matching file on the command line;
+		# we don't check for that condition in this script, or consider it a problem
 
 		error_if_running format
 
