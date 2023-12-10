@@ -418,6 +418,10 @@ elif [[ $commands == *" ${args[0]} "* ]]; then
 	elif [[ $command == installPlugins ]]; then
 		# https://www.jetbrains.com/help/idea/install-plugins-from-the-command-line.html#macos
 
+		if [[ ${#args[@]} == 1 ]]; then
+			error "You must pass the ID of at least one plugin to install"
+		fi
+
 		error_if_running installPlugins
 		exec_ide_binary installPlugins "${special_opts[@]}" "${args[@]:1}"
 	fi
