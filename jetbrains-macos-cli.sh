@@ -6,6 +6,12 @@ ide_app="/Applications/IntelliJ IDEA.app"
 ide_binary="idea"
 ide_name="IntelliJ IDEA"
 
+if [[ -n $JETBRAINS_CLI_TEST_MODE ]]; then
+	echo="echo"
+else
+	echo=""
+fi
+
 if [[ -z $NO_COLOR ]]; then
 	bright='\033[0;1m'
 	plain='\033[0m'
@@ -183,7 +189,8 @@ function exec_ide_binary() {
 		error "Unable to launch $ide_app: Can't find the right binary in its MacOS directory"
 	fi
 
-	exec "$ide_app/Contents/MacOS/$binary" "$@"
+	$echo exec "$ide_app/Contents/MacOS/$binary" "$@"
+	exit  # Only reached in test mode
 }
 
 # Basic command-line parsing, just handling --wait and the weird no-dash global options
@@ -325,7 +332,8 @@ elif [[ $commands == *" ${args[0]} "* ]]; then
 		format_sh="$ide_app/Contents/bin/format.sh"
 
 		if [[ -f $format_sh && -x $format_sh ]]; then
-			exec "$format_sh" "${special_opts[@]}" "${args[@]:1}"
+			$echo exec "$format_sh" "${special_opts[@]}" "${args[@]:1}"
+			exit  # Only reached in test mode
 		else
 			exec_ide_binary format "${special_opts[@]}" "${args[@]:1}"
 		fi
@@ -399,7 +407,8 @@ elif [[ $commands == *" ${args[0]} "* ]]; then
 		inspect_sh="$ide_app/Contents/bin/inspect.sh"
 
 		if [[ -f $inspect_sh && -x $inspect_sh ]]; then
-			exec "$inspect_sh" "${special_opts[@]}" "${args[@]:1}"
+			$echo exec "$inspect_sh" "${special_opts[@]}" "${args[@]:1}"
+			exit  # Only reached in test mode
 		else
 			DEFAULT_PROJECT_PATH="$(pwd)"  # Copied from inspect.sh, unsure whether/why it's needed
 			export DEFAULT_PROJECT_PATH
@@ -444,4 +453,4 @@ else
 fi
 
 # Launch the IDE via 'open'
-open -na "$ide_app" "${open_opts[@]}" --args "${special_opts[@]}" "${args[@]}"
+$echo open -na "$ide_app" "${open_opts[@]}" --args "${special_opts[@]}" "${args[@]}"
