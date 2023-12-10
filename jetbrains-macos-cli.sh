@@ -216,6 +216,14 @@ for arg; do
 	fi
 done
 
+# Ensure the IDE this script was created for still exists
+if [[ ! -e $ide_app ]]; then
+	echo -e "${light_red}Error: ${dark_red}IDE app not found: ${ide_app}${plain}" >&2
+	echo "Please re-run setup.sh" >&2
+	exit 1
+fi
+
+# Do the things, depending on what arguments/options were passed...
 # No arguments, just launch (with any special options)
 if [[ ${#args[@]} == 0 ]]; then
 	if [[ $wait == true ]]; then
